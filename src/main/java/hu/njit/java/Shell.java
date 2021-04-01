@@ -15,8 +15,9 @@ public class Shell {
     static String welcomeMessage = "\u001B[32m" +
             "###### SHELL by Melke Daniel ######\n" +
             "######## version 1.0, 2021 ########\n" +
-            "built-in commands: cd, ls, echo\n" +
-            "type exit to stop the program" +
+            "built-in commands: 'cd', 'ls', 'echo'\n" +
+            "type in '-help' for a guide\n" +
+            "type in 'exit' to stop the program" +
             "\u001B[0m";
 
     static void prompt() {

@@ -8,11 +8,16 @@ import java.io.InputStreamReader;
 public class CommandHandler implements Runnable{
 
     static String commandPass;
+    static String help = "Built in commands:\n" +
+            "   cd <path>   |   '..' -> change directory to parent directory, <directory name> -> if it exists, change directory\n" +
+            "   echo <String>    |   <String> writes the input on the screen\n" +
+            "   ls  |   lists the current directory's elements\n" +
+            "External commands which are not listed here are run through the Windows Command line";
 
     static boolean dirChanged = false;
 
     static boolean isCommandIn(String command) {
-        return command.startsWith("cd") || command.startsWith("echo") || command.startsWith("ls");
+        return command.startsWith("cd") || command.startsWith("echo") || command.startsWith("ls") || command.startsWith("-help");
     }
 
     public CommandHandler(String command) {
@@ -80,6 +85,26 @@ public class CommandHandler implements Runnable{
                 } else {
                     System.out.println("Unknown second command");
                 }
+            } else if (firstCommand.startsWith("-help")) {
+                System.out.println(help);
+                System.out.print("\n");
+                if (secondCommand.startsWith(" grep") || secondCommand.startsWith("grep")){
+                    System.out.println("---- grep ----");
+                    String toMatch = secondCommand.substring(5).replaceFirst(" ", "");
+                    String lines[] = help.split("\\n");
+                    int matches = 0;
+                    for (int i = 0; i < lines.length; ++i) {
+                        if (lines[i].contains(toMatch.toLowerCase()) || lines[i].contains(toMatch.toUpperCase())){
+                            System.out.println(lines[i]);
+                            matches++;
+                        }
+                    }
+                    if (matches == 0) {
+                        System.out.println("grep: no match found");
+                    }
+                } else {
+                    System.out.println("Unknown second command");
+                }
             }
         } else {
             if (command.startsWith("echo")) {
@@ -114,6 +139,8 @@ public class CommandHandler implements Runnable{
                     }
                 }
                 System.out.print("\n");
+            } else if (command.equals("-help")) {
+                System.out.println(help);
             }
         }
         Shell.prompt();

@@ -5,25 +5,56 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * CommandHandler class
+ *
+ * Processing user input as a command
+ *
+ * @author Daniel Melke
+ */
 public class CommandHandler implements Runnable{
 
+    /**
+     * local String variable for passed in user input
+     */
     static String commandPass;
+
+    /**
+     * help String: contains a formatted help message
+     */
     static String help = "Built in commands:\n" +
             "   cd <path>   |   '..' -> change directory to parent directory, <directory name> -> if it exists, change directory\n" +
             "   echo <String>    |   <String> writes the input on the screen\n" +
             "   ls  |   lists the current directory's elements\n" +
             "External commands which are not listed here are run through the Windows Command line";
 
+    /**
+     * determining if the initial directory or defaultDir has changed
+     */
     static boolean dirChanged = false;
 
+    /**
+     * determining if the user input (command) is a built-in command or not
+     * @param command String, from user input
+     * @return true: if the command is found in the built-in command list | false: if the command is not found in the built-in list
+     */
     static boolean isCommandIn(String command) {
         return command.startsWith("cd") || command.startsWith("echo") || command.startsWith("ls") || command.startsWith("-help");
     }
 
+    /**
+     * class constructor, takes 1 param as a command
+     * @param command String, from user input
+     */
     public CommandHandler(String command) {
         commandPass = command;
     }
 
+    /**
+     * Used for the external command execution's result as a reader, displays it on screen line by line.
+     * @param process Process, containing the external command's execution details
+     * @throws IOException for catching possible user input error
+     */
     static void readFromProcess(Process process) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line = "";
@@ -32,15 +63,30 @@ public class CommandHandler implements Runnable{
         }
     }
 
+    /**
+     * Executes the passed in external command through a process creator and reader.
+     * If it fails, it displays an error message.
+     * Finishes with displaying the prompt.
+     * @param command String, from user input
+     * @throws IOException for catching possible user input error
+     * @throws InterruptedException for catching possible process runtime errors
+     */
     static void executeOut(String command) throws IOException, InterruptedException {
         Process process = Runtime.getRuntime().exec("cmd /c " + command);
         readFromProcess(process);
         if (process.waitFor() != 0) {
             System.out.println("Command did not execute properly");
         }
+        process.destroy();
         Shell.prompt();
     }
 
+    /**
+     * Takes the passed in command param and inspects it to determine which built-in command should be executed.
+     * Accepts piped commands within the limits (grep)
+     * @param command String, from user input
+     * @throws IOException for catching possible user input error
+     */
     static void executeIn(String command) throws IOException{
         if (command.contains(" | ")){
             String firstCommand = command.split("\\|")[0];
@@ -73,9 +119,9 @@ public class CommandHandler implements Runnable{
                     System.out.println("---- grep ----");
                     String toMatch = secondCommand.substring(5).replaceFirst(" ", "");
                     int matches = 0;
-                    for (int i = 0; i < dirNames.length; ++i) {
-                        if (dirNames[i].contains(toMatch.toLowerCase()) || dirNames[i].contains(toMatch.toUpperCase())){
-                            System.out.println(dirNames[i]);
+                    for (String dirName : dirNames) {
+                        if (dirName.contains(toMatch.toLowerCase()) || dirName.contains(toMatch.toUpperCase())) {
+                            System.out.println(dirName);
                             matches++;
                         }
                     }
@@ -91,11 +137,11 @@ public class CommandHandler implements Runnable{
                 if (secondCommand.startsWith(" grep") || secondCommand.startsWith("grep")){
                     System.out.println("---- grep ----");
                     String toMatch = secondCommand.substring(5).replaceFirst(" ", "");
-                    String lines[] = help.split("\\n");
+                    String[] lines = help.split("\\n");
                     int matches = 0;
-                    for (int i = 0; i < lines.length; ++i) {
-                        if (lines[i].contains(toMatch.toLowerCase()) || lines[i].contains(toMatch.toUpperCase())){
-                            System.out.println(lines[i]);
+                    for (String line : lines) {
+                        if (line.contains(toMatch.toLowerCase()) || line.contains(toMatch.toUpperCase())) {
+                            System.out.println(line);
                             matches++;
                         }
                     }
@@ -146,6 +192,14 @@ public class CommandHandler implements Runnable{
         Shell.prompt();
     }
 
+    /**
+     * Executing the passed in command in the passed in directory, if the default directory has changed.
+     * Decides if the command is built-in or external first.
+     * @param command String, from user input
+     * @param dir String, directory, the current working path in String format
+     * @throws IOException for catching possible user input error
+     * @throws InterruptedException for catching possible process runtime errors
+     */
     static void executeDirChanged(String command, String dir) throws IOException, InterruptedException {
         if (isCommandIn(command)) {
             executeIn(command);
@@ -155,10 +209,16 @@ public class CommandHandler implements Runnable{
             if (process.waitFor() != 0) {
                 System.out.println("Command did not execute properly");
             }
+            process.destroy();
             Shell.prompt();
         }
     }
 
+    /**
+     * Implements the run() function from the Runnable class.
+     * First determines if the default directory is changed, then executes the command with the correct function and correct parameters.
+     * Catches IOException or InterruptedException for possible errors during execution.
+     */
     @Override
     public void run() {
         if (!Shell.directory.equals(Shell.defaultDir)) {

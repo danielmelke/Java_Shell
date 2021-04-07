@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"hu.njit.java","l":"CommandHandler"},{"p":"hu.njit.java","l":"Shell"}]
